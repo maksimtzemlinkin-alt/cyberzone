@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="CyberZone — журнал о кибербезопасности: статьи, утилиты, интерактивный хакер-терминал.">
+<title>CyberZone — кибербезопасность без хайпа</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<canvas id="matrix"></canvas>
+
+<nav>
+  <a href="index.html" class="logo">Cyber<b>Zone</b></a>
+  <div class="links">
+    <a href="index.html">главная</a>
+    <a href="index.html#articles">статьи</a>
+    <a href="index.html#about">о журнале</a>
+    <a href="hack-terminal.html">терминал</a>
+    <a href="https://github.com" target="_blank" rel="noopener" class="gh-btn">github ↗</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <span class="badge">// КИБЕРБЕЗОПАСНОСТЬ БЕЗ ХАЙПА</span>
+  <h1>Знай, как это работает.<br>Защити себя сам.</h1>
+  <p class="sub">CyberZone — журнал о цифровой безопасности простым языком. Разбираем угрозы, учим защите и даём честные советы — без страшилок и «взломай все» из фильмов.</p>
+
+  <!-- Поисковая строка -->
+  <div class="terminal-window" id="searchBox">
+    <div class="tw-bar">
+      <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      <span class="title">search@cyberzone:~ — найди что угодно</span>
+    </div>
+    <div class="tw-body">
+      <div class="tw-line">Try: <span style="color:#00ff9c">hack-terminal</span> · статьи · пароль · фишинг</div>
+      <div style="margin-top:8px">
+        <span class="tw-prompt">➜ ~/search&nbsp;</span>
+        <input id="searchInput" class="term-input" placeholder="введите запрос..." autocomplete="off">
+      </div>
+      <div id="searchResults" style="display:none"></div>
+    </div>
+  </div>
+</header>
+
+<section id="articles">
+  <div class="wrap">
+    <span class="sec-label">01 · Последние материалы</span>
+    <h2 class="sec-title">Статьи</h2>
+    <div class="grid g3" id="articlesGrid"><!-- инжектится из __ARTICLES__ --></div>
+  </div>
+</section>
+
+<section id="tools-preview">
+  <div class="wrap">
+    <span class="sec-label">02 · Инструменты</span>
+    <h2 class="sec-title">Полезные утилиты</h2>
+    <div class="grid g3">
+      <div class="card">
+        <span class="icon">⌨</span>
+        <h3>Хакер-терминал</h3>
+        <p>Интерактивная консоль с полезными функциями: генератор паролей, шифровальщик, анализатор ссылок и тренировка по защите. Не для взлома — для грамотной защиты.</p>
+        <a href="hack-terminal.html" class="sa"><span class="tag">запустить →</span></a>
+      </div>
+      <div class="card">
+        <span class="icon">§</span>
+        <h3>Пароль за 1 клик</h3>
+        <p>В терминале встроен генератор стойких паролей с энтропией и контролем длины. Пользуйся менеджером паролей, а этот — для срочных случаев.</p>
+        <a href="hack-terminal.html#password" class="sa"><span class="tag">открыть генератор →</span></a>
+      </div>
+      <div class="card">
+        <span class="icon">⚿</span>
+        <h3>Шифровальщик текста</h3>
+        <p>Перекодируй сообщения в base64, hex и ROT13 — полезно, чтобы понять, как работают простые шифры и почему они не подходят для реальной защиты.</p>
+        <a href="hack-terminal.html#cipher" class="sa"><span class="tag">зашифровать →</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap">
+    <span class="sec-label">03 · О журнале</span>
+    <h2 class="sec-title">Почему CyberZone</h2>
+    <div class="grid g2">
+      <div class="card">
+        <h3>Без паники</h3>
+        <p>Мы не пугаем «хакингом банков через 5 минут». Реальные угрозы почти всегда скучнее и опаснее того, что показывают в кино: слабые пароли, фишинг и обновления, которые все откладывают.</p>
+      </div>
+      <div class="card">
+        <h3>Только практика</h3>
+        <p>Каждая статья заканчивается конкретными шагами, которые можно сделать прямо сейчас: включить 2FA, проверить ссылку, поставить менеджер паролей. Без абстрактных «будьте осторожны».</p>
+      </div>
+      <div class="card">
+        <h3>Обучаем защите</h3>
+        <p>Терминал на сайте — это не про взлом. Это про то, как злоумышленники мыслят, чтобы вы могли защищаться. Знание противника — первая линия обороны.</p>
+      </div>
+      <div class="card">
+        <h3>Открыто</h3>
+        <p>Сайт создан на чистом HTML/CSS/JS, исходники лежат на GitHub. Любой может посмотреть код и разобраться, как всё устроено. Прозрачность — часть безопасности.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span class="logo">Cyber<b>Zone</b></span><br>
+  © 2026 · Материалы об образовании в сфере кибербезопасности · Не является руководством к противоправным действиям
+</footer>
+
+<script>
+window.__ARTICLES__=[
+  {title:'Как придумать пароль, который не взломают', cat:'Пароли', file:'article-password', keywords:['пароль','password','2fa','взлом']},
+  {title:'Фишинг: как распознать фальшивое письмо', cat:'Фишинг', file:'article-phishing', keywords:['фишинг','письмо','ссылка','обман']},
+  {title:'Что такое VPN и когда он реально нужен', cat:'Сеть', file:'article-vpn', keywords:['vpn','сеть','анонимность','интернет']},
+  {title:'Двухфакторная аутентификация (2FA) за 10 минут', cat:'Безопасность', file:'article-2fa', keywords:['2fa','аутентификация','смс','приложение']},
+  {title:'Как не попасться на фейковый сайт', cat:'Сеть', file:'article-fakesite', keywords:['фейк','сайт','мошенники','домен']},
+  {title:'Обновления: зачем их ставить и почему это важно', cat:'Защита', file:'article-updates', keywords:['обновление','патч','уязвимость','windows']}
+];
+</script>
+<script>
+(function(){
+  var grid=document.getElementById('articlesGrid');
+  var arts=window.__ARTICLES__||[];
+  window.__ARTICLES__=arts;
+  arts.forEach(function(a){
+    var c=document.createElement('div');
+    c.className='card article-card';
+    c.innerHTML=
+      '<span class="cat">'+a.cat+'</span>'+
+      '<h3>'+a.title+'</h3>'+
+      '<a href="'+a.file+'.html"><span class="tag">читать →</span></a>'+
+      '<div class="meta">5 мин чтения</div>';
+    grid.appendChild(c);
+  });
+})();
+</script>
+<script src="js/main.js"></script>
+</body>
+</html>

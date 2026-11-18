@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Как не попасться на фейковый сайт: признаки мошеннических страниц и подмены домена.">
+<title>Как не попасться на фейковый сайт — CyberZone</title>
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<canvas id="matrix"></canvas>
+<nav>
+  <a href="index.html" class="logo">Cyber<b>Zone</b></a>
+  <div class="links">
+    <a href="index.html">главная</a>
+    <a href="index.html#articles">статьи</a>
+    <a href="hack-terminal.html">терминал</a>
+  </div>
+</nav>
+<section style="padding-top:110px">
+  <div class="wrap">
+    <a href="index.html#articles" class="back">← ко всем статьям</a>
+    <article class="art-panel">
+      <h1>Как не попасться на фейковый сайт</h1>
+      <div class="art-meta">Категория: Сеть · 5 мин чтения</div>
+
+      <p>Фейковый сайт — это страница, которая копирует внешний вид настоящего сервиса или бренда, но принадлежит мошенникам. Её цель — заставить тебя ввести логин, пароль, номер карты или оплатить несуществующую покупку.</p>
+
+      <h2>Ключ — адресная строка</h2>
+      <p>Дизайн может быть абсолютно идентичным настоящему сайту. Поэтому единственный надёжный ориентир — это <b>домен</b> в адресной строке браузера.</p>
+      <div class="callout">
+        Домен — это последние два уровня адреса без всяких вставок перед ним. У настоящего Google это <code>google.com</code>. Всё, что стоит перед ним (точка, дефис, слово), — это поддомен или подделка.
+      </div>
+      <p>Как выглядит мошенничество:</p>
+      <ul>
+        <li>Заменили букву: <code>go0gle.com</code> или <code>gоogle.com</code> (кириллическая «о» в конце).</li>
+        <li>Добавили слово: <code>google-login.com</code>, <code>secure-google.ru</code>.</li>
+        <li>Настоящий домен спрятали в поддомене: <code>google.com.evil-site.ru</code> — здесь настоящий домен вовсе не Google, а <code>evil-site.ru</code>.</li>
+      </ul>
+
+      <h2>Другие признаки фейка</h2>
+      <ul>
+        <li><b>Неверный замок HTTPS.</b> Отсутствует или показан «не защищено».</li>
+        <li><b>Давление и срочность:</b> «аккаунт заблокирован», «предложение действует 10 минут».</li>
+        <li>Сайт не находится по прямому вводу имени, а открывается <b>только по ссылке из письма</b> или сообщения.</li>
+        <li>Просят ввести SMS-код, CVV-код карты или пароль — настоящие сервисы не спрашивают этого «за просто так».</li>
+      </ul>
+
+      <h2>Как проверить ссылку заранее</h2>
+      <ol>
+        <li>Наведи курсор на ссылку и посмотри, куда она ведёт на самом деле.</li>
+        <li>Поищи название сервиса в поиске и сравни домен с тем, что в ссылке.</li>
+        <li>Войди на настоящий сайт, вбив адрес вручную, а не по ссылке из подозрительного сообщения.</li>
+      </ol>
+
+      <p>Используй <a href="hack-terminal.html#links">анализатор ссылок</a> в нашем терминале — он разберёт адрес и подсветит подмены и подозрительные домены.</p>
+    </article>
+  </div>
+</section>
+<footer><span class="logo">Cyber<b>Zone</b></span><br>© 2026 · Обучающие материалы по кибербезопасности</footer>
+<script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="CyberZone Terminal — консоль с полезными инструментами защиты: генератор паролей, шифратор, проверка ссылок, оценка утечек.">
+<title>CyberZone Terminal — инструменты защиты</title>
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<canvas id="matrix"></canvas>
+
+<nav>
+  <a href="index.html" class="logo">Cyber<b>Zone</b></a>
+  <div class="links">
+    <a href="index.html">главная</a>
+    <a href="index.html#articles">статьи</a>
+    <a href="#password" data-scroll>пароли</a>
+    <a href="#cipher">шифр</a>
+    <a href="#links">ссылки</a>
+    <a href="https://github.com" target="_blank" rel="noopener" class="gh-btn">github ↗</a>
+  </div>
+</nav>
+
+<header class="hero" style="min-height:auto;padding:110px 5% 50px">
+  <span class="badge">// CYBERZONE TERMINAL v1.0</span>
+  <h1 style="font-size:clamp(1.8rem,4vw,3rem)">Полезная консоль<br>для твоей защиты</h1>
+  <p class="sub" style="max-width:700px">Без «взлома всего» и магии из фильмов. Эти инструменты помогают защититься: создать настоящий пароль, понять, как шифруется текст, проверить подозрительную ссылку и провести аудит своих привычек. Всё работает в браузере — данные не уходят с твоего устройства.</p>
+</header>
+
+<section style="padding-top:20px">
+  <div class="wrap">
+
+    <!-- Генератор паролей -->
+    <div class="card" id="password" style="margin-bottom:24px">
+      <span class="icon">🔑</span>
+      <h3>Генератор стойких паролей</h3>
+      <p>Создаёт случайный пароль, который невозможно угадать перебором. Отметь зелёные — надёжные.</p>
+      <div class="terms-wrap" style="margin-top:6px">
+        <div class="tool-card">
+          <h3>Длина</h3>
+          <input type="range" id="pwLen" min="8" max="32" value="16" style="width:100%">
+          <div style="font-family:var(--mono);font-size:.8rem;color:var(--muted)"><span id="pwLenVal">16</span> символов</div>
+        </div>
+        <div class="tool-card">
+          <h3>Набор символов</h3>
+          <label style="display:block;font-size:.9rem"><input type="checkbox" id="pwUpper" checked> A-Z (заглавные)</label>
+          <label style="display:block;font-size:.9rem"><input type="checkbox" id="pwLower" checked> a-z (строчные)</label>
+          <label style="display:block;font-size:.9rem"><input type="checkbox" id="pwNum" checked> 0-9 (цифры)</label>
+          <label style="display:block;font-size:.9rem"><input type="checkbox" id="pwSym"> !@#$% (символы)</label>
+        </div>
+        <div class="tool-card">
+          <h3>Пароль</h3>
+          <div class="output" id="pwOut">—</div>
+          <div style="font-size:.8rem;color:var(--muted)" id="pwEntropy"></div>
+          <button class="btn" onclick="genPassword()" style="margin-top:8px">Сгенерировать</button>
+          <button class="btn cyan" onclick="copyText('pwOut')">Копировать</button>
+          <button class="btn red" onclick="pwOut.innerHTML='—';pwEntropy.textContent=''">Сброс</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Шифровальщик -->
+    <div class="card" id="cipher" style="margin-bottom:24px">
+      <span class="icon">🔐</span>
+      <h3>Шифровальщик текста</h3>
+      <p>Не для секретов — для обучения. Так ты поймёшь, чем base64/hex/ROT13 отличаются, и почему они не являются настоящим шифрованием.</p>
+      <textarea id="cipherInput" class="field" placeholder="Введите текст для кодирования..."></textarea>
+      <button class="btn" onclick="encodeText()">Зашифровать</button>
+      <button class="btn red" onclick="document.getElementById('cipherOut').innerHTML=''">Очистить</button>
+      <div class="output" id="cipherOut"></div>
+    </div>
+
+    <!-- Генератор hash -->
+    <div class="card" id="hash" style="margin-bottom:24px">
+      <span class="icon">#</span>
+      <h3>Хеш текста (SHA-256 / MD5)</h3>
+      <p>Хеш — «отпечаток» данных. Полезно проверять целостность файла или понять, как сайты хранят твой пароль.</p>
+      <input id="hashInput" class="field" placeholder="Введите текст...">
+      <button class="btn" onclick="genHash('SHA-256')">SHA-256</button>
+      <button class="btn" onclick="genHash('MD5')">MD5</button>
+      <div class="output" id="hashOut"></div>
+    </div>
+
+    <!-- Проверка ссылок -->
+    <div class="card" id="links" style="margin-bottom:24px">
+      <span class="icon">🔗</span>
+      <h3>Анализатор ссылок</h3>
+      <p>Вставляет ссылку и показывает, куда она ведёт на самом деле. Распознаёт маскировку: «google.com» в тексте не значит, что адрес ведёт на Google.</p>
+      <input id="linkInput" class="field" placeholder="Вставьте URL, например: http://google.com.evil.ru/login">
+      <button class="btn" onclick="checkLink()">Проверить</button>
+      <div class="output" id="linkOut"></div>
+    </div>
+
+    <!-- Оценка утечки -->
+    <div class="card" id="leak" style="margin-bottom:24px">
+      <span class="icon">⚠</span>
+      <h3>Оценка утечки паролей</h3>
+      <p>Проверяет твой пароль по базе известных утечек (Have I Been Pwned) — безопасно, пароль не отправляется целиком, только его хеш.</p>
+      <input id="leakPass" class="field" type="password" placeholder="Введите пароль для проверки...">
+      <button class="btn" onclick="checkLeak()">Проверить</button>
+      <div class="output" id="leakOut"></div>
+    </div>
+
+    <!-- Чеклист -->
+    <div class="card" id="checklist">
+      <span class="icon">✔</span>
+      <h3>Чеклист цифровой гигиены</h3>
+      <p>Отметь пункты — получишь «оценку защищённости».</p>
+      <div id="checks">
+        <label style="display:block;font-size:.95rem;padding:4px 0"><input type="checkbox" class="chk" onchange="checklistScore(this)"> Я использую менеджер паролей</label>
+        <label style="display:block;font-size:.95rem;padding:4px 0"><input type="checkbox" class="chk" onchange="checklistScore(this)"> Все сайты входят в меня через 2FA</label>
+        <label style="display:block;font-size:.95rem;padding:4px 0"><input type="checkbox" class="chk" onchange="checklistScore(this)"> У меня разные пароли везде</label>
+        <label style="display:block;font-size:.95rem;padding:4px 0"><input type="checkbox" class="chk" onchange="checklistScore(this)"> Я включаю обновления автоматически</label>
+        <label style="display:block;font-size:.95rem;padding:4px 0"><input type="checkbox" class="chk" onchange="checklistScore(this)"> Я не кликаю по непроверенным ссылкам</label>
+        <label style="display:block;font-size:.95rem;padding:4px 0"><input type="checkbox" class="chk" onchange="checklistScore(this)"> Проверяю URL подозрительных сайтов</label>
+        <label style="display:block;font-size:.95rem;padding:4px 0"><input type="checkbox" class="chk" onchange="checklistScore(this)"> Резервное копирование данных настроено</label>
+      </div>
+      <div class="output" id="chkOut" style="margin-top:14px">Оценка: 0/7 · Начни отмечать!</div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <span class="logo">Cyber<b>Zone</b></span><br>
+  © 2026 · CyberZone Terminal · Все вычисления выполняются локально в браузере. Никакие данные не отправляются на сервер.
+</footer>
+
+<!-- Подключаем хеш-функции (чистый JS, без библиотек) -->
+<script src="js/sha256.js"></script>
+<script src="js/md5.js"></script>
+<script>
+/* ===== Генератор паролей ===== */
+var pwLenInput=document.getElementById('pwLen');
+pwLenInput.addEventListener('input',function(){document.getElementById('pwLenVal').textContent=pwLenInput.value;});
+function genPassword(){
+  var len=+pwLenInput.value;
+  var upper='ABCDEFGHIJKLMNOPQRSTUVWXYZ',lower='abcdefghijklmnopqrstuvwxyz',num='0123456789',sym='!@#$%^&*()-_=+[]{};:,.?';
+  var sets=[];
+  if(document.getElementById('pwUpper').checked) sets.push(upper);
+  if(document.getElementById('pwLower').checked) sets.push(lower);
+  if(document.getElementById('pwNum').checked) sets.push(num);
+  if(document.getElementById('pwSym').checked) sets.push(sym);
+  if(!sets.length){document.getElementById('pwErr').innerHTML='<span class="err">Выбери хотя бы один набор символов</span>';return;}
+  var all=sets.join(''),pw='';
+  // гарантируем по одному символу из каждого выбранного набора
+  sets.forEach(function(s){pw+=s[Math.floor(Math.random()*s.length)];});
+  for(var i=pw.length;i<len;i++) pw+=all[Math.floor(Math.random()*all.length)];
+  // тасуем, чтобы порядок не был предсказуем
+  pw=pw.split('').sort(function(){return Math.random()-0.5;}).join('');
+  var entropy=Math.round(len*Math.log2(all.length));
+  var out=document.getElementById('pwOut');
+  out.innerHTML='<span style="font-size:1.1rem;letter-spacing:1px">'+pw+'</span>';
+  var ent=document.getElementById('pwEntropy');
+  ent.textContent='Энтропия: ~'+entropy+' бит — '+((entropy>=60)?'🔒 отлично':((entropy>=40)?'⚠ нормально, но можно длиннее':'⛔ слабый'));
+}
+function copyText(id){
+  var el=document.getElementById(id);
+  var text=el.textContent.replace('—','').trim();
+  if(!text) return;
+  if(navigator.clipboard){navigator.clipboard.writeText(text);}
+  el.textContent='Скопировано ✓';
+  setTimeout(function(){el.innerHTML=text||'—';},1200);
+}
+
+/* ===== Шифровальщик ===== */
+function encodeText(){
+  var txt=document.getElementById('cipherInput').value;
+  if(!txt){document.getElementById('cipherOut').innerHTML='<span class="err">Введи текст.</span>';return;}
+  var b64=btoa(unescape(encodeURIComponent(txt)));
+  var hex='';
+  for(var i=0;i<txt.length;i++) hex+=txt.charCodeAt(i).toString(16).padStart(2,'0');
+  var rot13=txt.replace(/[a-zA-Z]/g,function(c){
+    return String.fromCharCode( (c<='Z'?90:122)>=(c=c.charCodeAt(0)+13) ? c : c-26 );
+  });
+  var out=document.getElementById('cipherOut');
+  out.innerHTML='<b style="color:var(--cyan)">base64:</b> '+b64+'<br><b style="color:var(--cyan)">hex:</b> '+hex+'<br><b style="color:var(--cyan)">ROT13:</b> '+rot13+
+  '<div style="margin-top:8px;color:var(--muted);font-size:.75rem">⚠ Это обучающие кодировки, не настоящий шифр: их может расшифровать кто угодно за секунды.</div>';
+}
+
+/* ===== Хеш-логика ===== */
+function genHash(algo){
+  var txt=document.getElementById('hashInput').value;
+  if(!txt){document.getElementById('hashOut').innerHTML='<span class="err">Введи текст.</span>';return;}
+  var res = (algo==='SHA-256') ? sha256(txt) : md5(txt);
+  document.getElementById('hashOut').innerHTML='<b style="color:var(--cyan)">'+algo+':</b> '+res;
+}
+
+/* ===== Проверка ссылок ===== */
+function checkLink(){
+  var url=document.getElementById('linkInput').value.trim();
+  var out=document.getElementById('linkOut');
+  if(!url){out.innerHTML='<span class="err">Вставь ссылку.</span>';return;}
+  var flags=[];
+  var host='';
+  try{
+    var u=new URL(url.startsWith('www.')?'http://'+url:(url.indexOf('://')===-1?'http://'+url:url));
+    host=u.hostname;
+  }catch(e){out.innerHTML='<span class="err">Не могу разобрать ссылку.</span>';return;}
+  var parts=host.split('.');
+  var tld=parts[parts.length-1].toLowerCase();
+  var interesting=['.tk','.ml','.ga','.cf','.gq','.xyz','.top','.icu','.cc','.info'];
+  if(interesting.indexOf('.'+tld)!==-1) flags.push('⚠ подозрительный домен (TDL: .'+tld+')');
+  if(parts.length>=3) flags.push('⚠ поддомен: возможно, маскировка настоящего домена');
+  // проверка на известные бренды внутри пути
+  var suspicious=['login','account','verify','security','confirm','update','password','signin'];
+  suspicious.forEach(function(s){ if(url.toLowerCase().indexOf(s)!==-1) flags.push('⚠ содержит слово «'+s+'» — общие признаки фишинга'); });
+  if(flags.length===0) flags.push('✓ ничего подозрительного не очевидно. Но всегда проверяй URL в адресной строке.');
+  out.innerHTML='<b style="color:var(--cyan)">Хост:</b> '+host+'<br>'+flags.join('<br>')+
+    '<div style="margin-top:8px;color:var(--muted);font-size:.75rem">Единственный надёжный способ — смотреть на ДОМЕН (например, google.com), а не на текст ссылки.</div>';
+}
+
+/* ===== Проверка утечки ===== */
+async function checkLeak(){
+  var pw=document.getElementById('leakPass').value;
+  var out=document.getElementById('leakOut');
+  if(!pw){out.innerHTML='<span class="err">Введи пароль.</span>';return;}
+  out.innerHTML='<span style="color:var(--muted)">Проверяю через API Have I Been Pwned... это может занять несколько секунд.</span>';
+  // SHA-1 по первым 5 символам — принцип k-anonymity
+  var sha1='';
+  try{
+    sha1=await sha1hex(pw);
+  }catch(e){out.innerHTML='<span class="err">Не могу вычислить хеш в этом браузере.</span>';return;}
+  var prefix=sha1.slice(0,5).toUpperCase();
+  try{
+    var resp=await fetch('https://api.pwnedpasswords.com/range/'+prefix);
+    var text=await resp.text();
+    var suffix=sha1.slice(5).toUpperCase();
+    var found=false;
+    text.split('\n').forEach(function(line){
+      var parts=line.split(':');
+      if(parts[0]===suffix){ found=true; out.innerHTML='<span class="err">⚠ Пароль УТЁК в сети! Встречается '+parts[1].trim()+' раз.</span> <b>Немедленно смени его.</b>'; }
+    });
+    if(!found){ out.innerHTML='<span class="ok" style="color:var(--green)">✓ По базам известных утечек этот пароль не найден. Это хорошо, но длинный случайный пароль всё равно надёжнее.</span>'; }
+  }catch(e){
+    out.innerHTML='<span class="err">Не удалось подключиться к API (возможно, нет интернета). Попробуй позже.</span>';
+  }
+}
+async function sha1hex(str){
+  // SHA-1 через Web Crypto API
+  var buf=await crypto.subtle.digest('SHA-1',new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+/* ===== Чеклист ===== */
+function checklistScore(){
+  var checked=document.querySelectorAll('.chk:checked').length;
+  var total=document.querySelectorAll('.chk').length;
+  var rating= checked>=6?'🚀 Отлично! Ты в топ-5% пользователей.'
+             :checked>=4?'👍 Неплохо, но есть куда расти.':
+             checked>=2?'😐 Начало положено. Защищайся дальше.'
+             :'⛔ Очень опасно. Начни хотя бы с менеджера паролей.';
+  document.getElementById('chkOut').innerHTML='Оценка: '+checked+'/'+total+' · '+rating;
+}
+</script>
+<script src="js/main.js"></script>
+</body>
+</html>
