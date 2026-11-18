@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Экзамен по кибербезопасности: вопросы по всем статьям CyberZone с подсчётом баллов и оценкой.">
+<title>Экзамен по кибербезопасности — CyberZone</title>
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  .exam-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px}
+  .exam-score{font-family:var(--mono);font-size:1rem;color:var(--green)}
+  .section-title{display:flex;align-items:center;gap:12px;margin:28px 0 4px}
+  .q{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:16px}
+  .q .qtext{font-family:var(--mono);font-size:1rem;font-weight:700;margin-bottom:12px;color:var(--text)}
+  .q .qtag{display:inline-block;font-family:var(--mono);font-size:.7rem;color:var(--orange);letter-spacing:1px;margin-bottom:8px}
+  .opt{display:block;padding:11px 14px;margin:8px 0;border:1px solid var(--line);border-radius:8px;cursor:pointer;transition:.15s;font-size:.95rem;background:#0d1424;color:var(--text)}
+  .opt:hover{border-color:var(--cyan);background:#13203a}
+  .opt input{margin-right:10px;accent-color:var(--green);cursor:pointer}
+  .opt.correct{border-color:var(--green);background:rgba(0,255,156,.12);color:var(--green)}
+  .opt.wrong{border-color:var(--red);background:rgba(255,77,109,.10);color:#ff8fa3}
+  .opt.locked{opacity:.55;cursor:default;pointer-events:none}
+  .actbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:24px 0}
+  .result{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:30px;text-align:center}
+  .result .big{font-family:var(--mono);font-size:3rem;font-weight:800;color:var(--green)}
+  .result .label{color:var(--muted);margin-top:8px}
+  .result.show{display:block}
+  .progress{height:10px;background:#0d1424;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:16px 0}
+  .progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--cyan));transition:width .3s}
+  .per-q{font-family:var(--mono);font-size:.75rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<canvas id="matrix"></canvas>
+<nav>
+  <a href="index.html" class="logo">Cyber<b>Zone</b></a>
+  <div class="links">
+    <a href="index.html">главная</a>
+    <a href="index.html#articles">статьи</a>
+    <a href="exam.html"><span style="color:var(--green)">экзамен</span></a>
+    <a href="hack-terminal.html">терминал</a>
+  </div>
+</nav>
+
+<section style="padding-top:110px">
+  <div class="wrap">
+    <span class="sec-label">// ПРОВЕРЬ СЕБЯ</span>
+    <div class="exam-header">
+      <div>
+        <h1 class="sec-title" style="margin-bottom:6px">Экзамен по кибербезопасности</h1>
+        <p style="color:var(--muted);max-width:640px">27 вопросов по всем статьям CyberZone. Отвечай честно, в конце получишь результат: количество баллов и оценку. Вопросы совпадают с тем, что написано в наших статьях.</p>
+      </div>
+      <div class="exam-score" id="liveScore">Отвечено: 0 / 27 · Баллов: 0</div>
+    </div>
+    <div class="progress"><i id="progressBar"></i></div>
+
+    <div id="examBox"><!-- вопросы рендерятся скриптом --></div>
+
+    <div class="actbar">
+      <button class="btn" onclick="submitExam()">Завершить экзамен</button>
+      <button class="btn red" onclick="resetExam()">Сбросить и начать заново</button>
+    </div>
+
+    <div class="result" id="resultBox">
+      <div style="font-family:var(--mono);color:var(--green);font-size:.8rem;letter-spacing:2px;margin-bottom:10px">РЕЗУЛЬТАТ</div>
+      <div class="big" id="resultScore">0 / 27</div>
+      <div class="label" id="resultText"></div>
+      <div style="margin-top:18px"><a href="index.html#articles"><span class="tag">перечитать статьи →</span></a></div>
+    </div>
+  </div>
+</section>
+
+<footer><span class="logo">Cyber<b>Zone</b></span><br>© 2026 · Обучающие материалы по кибербезопасности · Не является руководством к противоправным действиям</footer>
+
+<script>
+// Вопросы по всем статьям. format: [ОТВЕТ-ИНДЕКС, текст, [варианты]]
+var examGroups = [
+  {art:'Пароли', file:'article-password', qs:[
+    [0,'От чего сильнее всего зависит надёжность пароля?',['От длины и случайности','От количества значков и цифр','От того, насколько он «страшный» на вид','От того, что его трудно запомнить']],
+    [1,'Что лучше защитит аккаунт при утечке пароля из базы?',['Уникальный пароль на каждый сервис + 2FA','Одинаковый сложный пароль везде','Смена пароля раз в месяц','Секретный вопрос']],
+    [2,'Что рекомендуют использовать для хранения всех паролей?',['Менеджер паролей','Написать на стикере','Записную книжку в ящике','Один и тот же пароль везде']]
+  ]},
+  {art:'Фишинг', file:'article-phishing', qs:[
+    [2,'Какой главный признак фишингового письма?',['Оно длинное','Оно приходит ночью','Просьба ввести данные по ссылке под давлением','В нём есть орфографические ошибки']],
+    [0,'Что делать, если «банк» требует ввести пароль по ссылке из письма?',['Зайти на сайт банка вручную, самому','Кликать только если письмо срочное','Ответить и подтвердить','Ввести пароль — банк же знает']],
+    [1,'Что нельзя сообщать даже «сотруднику банка»?',['Свой номер телефона','SMS-код подтверждения','Имя','Город проживания']]
+  ]},
+  {art:'VPN', file:'article-vpn', qs:[
+    [1,'Что действительно делает VPN?',['Ускоряет интернет в разы','Шифрует соединение и скрывает IP от сайтов','Полностью скрывает тебя от любых служб','Мгновенно лечит вирусы']],
+    [0,'Главный недостаток бесплатных VPN-сервисов: они…',['Часто собирают и продают данные пользователей','Всегда сильно замедляют интернет','Не работают на телефонах','Не поддерживают YouTube']],
+    [2,'Когда VPN реально полезен?',['Чтобы обойти антивирус','Чтобы создавать пароли','В публичном Wi-Fi и для приватности соединения','Чтобы скачивать игры быстрее']]
+  ]},
+  {art:'2FA', file:'article-2fa', qs:[
+    [2,'Что такое двухфакторная аутентификация (2FA)?',['Два пароля одновременно','Пароль и антивирус','Второй фактор: то, что ты имеешь (телефон, ключ)','Код на два часа']],
+    [1,'Самый надёжный вид второго фактора?',['SMS-код','Физический ключ (например, YubiKey)','Кодовое слово','Дата рождения']],
+    [0,'С какого аккаунта лучше начать включать 2FA?',['С почты — через неё сбрасывают пароли на всём остальном','С игрового аккаунта','С форума','Со стриминга']]
+  ]},
+  {art:'Фейковые сайты', file:'article-fakesite', qs:[
+    [1,'На что смотреть в первую очередь, чтобы не попасться на фейк?',['На дизайн','На домен в адресной строке','На логотип','На количество разделов']],
+    [0,'Какой из адресов НЕ принадлежит настоящему Google?',['google.com.evil-site.ru','google.com','www.google.com','google.ru']],
+    [2,'Что делают мошенники, чтобы подделать адрес?',['Увеличивают скорость сайта','Пишут больше текста','Заменяют буквы (go0gle.com) или прячут домен в поддомене','Добавляют восторженные отзывы']]
+  ]},
+  {art:'Обновления', file:'article-updates', qs:[
+    [0,'Для чего на самом деле нужны системные обновления?',['Закрывают уязвимости в коде','Просто раздражают пользователей','Добавляют рекламу','Меняют оформление']],
+    [1,'Что происходит, когда патч вышел, а ты его не поставил?',['Ничего','Атакующие начинают искать незакрытые устройства','Интернет отключается','Сайты перестают работать']],
+    [2,'Почему нельзя ставить «обновления» по ссылкам из всплывающих окон?',['Они слишком большие','Они меняют тему','Это может быть вредоносная маскировка','Они требуют плату']]
+  ]},
+  {art:'Доксинг', file:'article-doxxing', qs:[
+    [2,'Что такое доксинг?',['Установка вируса','Замедление интернета','Сбор и публикация чужих личных данных без разрешения','Шифрование файлов']],
+    [1,'Главный источник данных для доксинга обычно…',['Сверхсекретные взломанные базы','Публичные следы: открытые профили, геометки, никнеймы, утечки','Слухи','Угадывание по лицу']],
+    [0,'Первое, что нужно сделать, если тебя начали доксить?',['Сохранить доказательства (скриншоты, ссылки)','Ответить обидчику в переписке','Удалить все данные на телефоне','Менять телефон']]
+  ]},
+  {art:'Браузеры · Tor · VPN', file:'article-browsers', qs:[
+    [2,'Что скрывает Tor Browser от сайта?',['Скорость соединения','Логин и пароль','Ваш IP-адрес и местоположение','Содержимое сообщений']],
+    [0,'Чего НЕ гарантирует даже «Tor + платный VPN»?',['Полную анонимность при уже утёкших данных и единой почте','Шифрование соединения','Скрытие IP от сайтов','Скрытие факта использования Tor']],
+    [1,'Что у VPN-провайдера — главное узкое место доверия?',['Цена','Он видит весь твой трафик, даже если обещает «нет логов»','Скорость','Нельзя включить на телефоне']]
+  ]},
+  {art:'DoS и DDoS', file:'article-ddos', qs:[
+    [1,'Чем DDoS отличается от DoS?',['Скоростью атаки','DDoS идёт с тысяч разных машин сразу, DoS — с одного источника','Типом уязвимости','Длительностью']],
+    [0,'Что такое ботнет?',['Сеть из заражённых устройств, которыми управляют удалённо','Антивирус','Клавиатура','Вид роутера']],
+    [2,'Почему крупные ресурсы (например, GitHub Pages) не «падают» от DDoS?',['У них очень мало посетителей','Им не нужен интернет','У них слои защиты: CDN, сети очистки, распределённые серверы','Они платят за приоритет']]
+  ]}
+];
+
+var answered = {};
+var box = document.getElementById('examBox');
+var total = 0;
+examGroups.forEach(function(g){ total += g.qs.length; });
+
+function render(){
+  box.innerHTML = '';
+  examGroups.forEach(function(g, gi){
+    box.innerHTML += '<div class="section-title"><a href="'+g.file+'.html"><span class="tag">'+g.art+'</span></a></div>';
+    g.qs.forEach(function(q, qi){
+      var id = gi+'-'+qi;
+      var opts = q[2].map(function(o, oi){
+        var cls = '';
+        if(answered[id] !== undefined){
+          if(oi === q[0]) cls += 'correct';
+          else if(oi === answered[id]) cls += ' wrong';
+          cls += ' locked';
+        }
+        return '<label class="opt '+cls.trim()+'"><input type="radio" name="q_'+id+'" value="'+oi+'" onchange="pick(\''+id+'\','+oi+')" '+((answered[id]!==undefined)?'disabled':'')+'><span>'+o+'</span></label>';
+      }).join('');
+      box.innerHTML += '<div class="q"><div class="qtag">'+g.art+'</div><div class="qtext">'+(qi+1)+'. '+q[1]+'</div>'+opts+'</div>';
+    });
+  });
+}
+function pick(id, val){
+  answered[id] = val;
+  updateScore();
+  render();
+}
+function updateScore(){
+  var done = Object.keys(answered).length;
+  var score = 0;
+  examGroups.forEach(function(g, gi){ g.qs.forEach(function(q, qi){ var id=gi+'-'+qi; if(answered[id]===q[0]) score++; }); });
+  document.getElementById('liveScore').textContent = 'Отвечено: '+done+' / '+total+' · Баллов: '+score;
+  document.getElementById('progressBar').style.width = Math.round(done/total*100)+'%';
+}
+function submitExam(){
+  var done = Object.keys(answered).length;
+  if(done < total){
+    if(!confirm('Ответить ещё на '+(total-done)+' вопросов? Экзамен завершится с текущими ответами.')) return;
+  }
+  var score = 0;
+  examGroups.forEach(function(g, gi){ g.qs.forEach(function(q, qi){ var id=gi+'-'+qi; if(answered[id]===q[0]) score++; }); });
+  var boxEl = document.getElementById('resultBox');
+  boxEl.classList.add('show');
+  document.getElementById('resultScore').textContent = score+' / '+total;
+  var pct = score/total;
+  var txt = pct>=0.9?'Отлично! Ты усвоил материал — настоящий кибергражданин. 🏆'
+          :pct>=0.7?'Хорошо! Но есть пара слабых мест — перечитай статьи по ошибкам. 👍'
+          :pct>=0.5?'Неплохо, но база хромает. Загляни в статьи ещё раз. 📖'
+          :'Пока слабовато. Рекомендую перечитать материалы от начала до конца. 🔄';
+  document.getElementById('resultText').textContent = txt;
+  document.getElementById('resultBox').scrollIntoView({behavior:'smooth'});
+}
+function resetExam(){
+  answered = {};
+  document.getElementById('resultBox').classList.remove('show');
+  updateScore();
+  render();
+}
+render();
+</script>
+<script src="js/main.js"></script>
+</body>
+</html>
