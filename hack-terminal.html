@@ -190,6 +190,60 @@ function genHash(algo){
 }
 
 /* ===== Проверка ссылок ===== */
+// ===== База официальных доменов популярных сервисов (Россия) =====
+// Каждая запись — домен второго уровня (или имени). Поддомены этих доменов
+// считаются законными, если суффикс совпадает (например maps.google.com — ок,
+// а google.com.evil.ru — НЕТ, потому что настоящий домен тут evil.ru).
+var OFFICIAL_DOMAINS={
+  // Соцсети и мессенджеры
+  'vk.com':'ВКонтакте','vk.ru':'ВКонтакте','mail.ru':'Почта Mail.ru','ok.ru':'Одноклассники',
+  'telegram.org':'Telegram','t.me':'Telegram','telegram.me':'Telegram','whatsapp.com':'WhatsApp',
+  'discord.com':'Discord','discord.gg':'Discord','signal.org':'Signal','viber.com':'Viber',
+  'wechat.com':'WeChat','skype.com':'Skype','icq.com':'ICQ','element.io':'Element/Matrix',
+  // Поисковики и глобальные
+  'google.com':'Google','google.ru':'Google','yandex.ru':'Яндекс','yandex.com':'Яндекс','ya.ru':'Яндекс',
+  'bing.com':'Bing','duckduckgo.com':'DuckDuckGo',
+  // Видео и музыка
+  'youtube.com':'YouTube','youtu.be':'YouTube','rutube.ru':'Rutube','vkvideo.ru':'VK Видео',
+  'tiktok.com':'TikTok','spotify.com':'Spotify','music.yandex.ru':'Яндекс Музыка','zvuk.com':'Звук',
+  'apple.com':'Apple','music.apple.com':'Apple Music',
+  // Игры и стриминг
+  'twitch.tv':'Twitch','steampowered.com':'Steam','steamcommunity.com':'Steam','epicgames.com':'Epic Games',
+  'xbox.com':'Xbox','playstation.com':'PlayStation','wildberries.ru':'Wildberries','ozon.ru':'Ozon',
+  // Финансы и банки (Россия)
+  'sberbank.ru':'Сбербанк','sber.ru':'Сбер','vtb.ru':'ВТБ','alfabank.ru':'Альфа-Банк','tinkoff.ru':'Тинькофф',
+  'gazprombank.ru':'Газпромбанк','raiffeisen.ru':'Райффайзен','otpbank.ru':'ОТП Банк','psbank.ru':'ПСБ',
+  'rshb.ru':'Россельхозбанк','postbank.ru':'Почта Банк','qiwi.com':'QIWI','webmoney.ru':'Webmoney',
+  'banki.ru':'Банки.ру',
+  // Госуслуги и сервисы
+  'gosuslugi.ru':'Госуслуги','nalog.gov.ru':'ФНС России','kremlin.ru':'Кремль','gosuslugi.ru':'Госуслуги',
+  'zdrav.expert':'ЗДРАВ','avito.ru':'Авито','hh.ru':'hh.ru','superjob.ru':'Superjob','drom.ru':'Drom',
+  // VPN и мессенджеры (легальные приложения)
+  'nordvpn.com':'NordVPN','expressvpn.com':'ExpressVPN','mullvad.net':'Mullvad','hidemy.name':'HideMyAss',
+  'windscribe.com':'Windscribe','protonvpn.com':'Proton VPN','1password.com':'1Password',
+  'clamav.net':'ClamAV',
+  // Облака и разработка
+  'github.com':'GitHub','gitlab.com':'GitLab','dropbox.com':'Dropbox','onedrive.com':'OneDrive',
+  'mega.nz':'MEGA','yadi.sk':'Яндекс.Диск','cloud.mail.ru':'Облако Mail.ru','googleusercontent.com':'Google',
+  'notion.so':'Notion','trello.com':'Trello',
+  // ОС и браузеры
+  'microsoft.com':'Microsoft','windows.com':'Windows','linux.org':'Linux','ubuntu.com':'Ubuntu',
+  'mozilla.org':'Mozilla','firefox.com':'Firefox','opera.com':'Opera','brave.com':'Brave',
+  'chromium.org':'Chromium','torproject.org':'Tor Project'
+};
+var OFFICIAL_SUBFIXES=['yandex.ru','google.com','google.ru','mail.ru','vk.com','ok.ru','t.me','github.com'];
+function getOfficialName(host){
+  host=host.toLowerCase().replace(/^www\./,'');
+  // точное совпадение домена
+  if(OFFICIAL_DOMAINS[host]) return OFFICIAL_DOMAINS[host];
+  // поддомен официального домена: maps.google.com → google.com
+  var parts=host.split('.');
+  for(var i=0;i<parts.length-1;i++){
+    var seg=parts.slice(i).join('.');
+    if(OFFICIAL_DOMAINS[seg] && OFFICIAL_SUBFIXES.indexOf(seg)!==-1) return OFFICIAL_DOMAINS[seg];
+  }
+  return null;
+}
 function checkLink(){
   var url=document.getElementById('linkInput').value.trim();
   var out=document.getElementById('linkOut');
@@ -202,13 +256,22 @@ function checkLink(){
   }catch(e){out.innerHTML='<span class="err">Не могу разобрать ссылку.</span>';return;}
   var parts=host.split('.');
   var tld=parts[parts.length-1].toLowerCase();
-  var interesting=['.tk','.ml','.ga','.cf','.gq','.xyz','.top','.icu','.cc','.info'];
-  if(interesting.indexOf('.'+tld)!==-1) flags.push('⚠ подозрительный домен (TDL: .'+tld+')');
-  if(parts.length>=3) flags.push('⚠ поддомен: возможно, маскировка настоящего домена');
-  // проверка на известные бренды внутри пути
-  var suspicious=['login','account','verify','security','confirm','update','password','signin'];
-  suspicious.forEach(function(s){ if(url.toLowerCase().indexOf(s)!==-1) flags.push('⚠ содержит слово «'+s+'» — общие признаки фишинга'); });
-  if(flags.length===0) flags.push('✓ ничего подозрительного не очевидно. Но всегда проверяй URL в адресной строке.');
+  var interesting=['.tk','.ml','.ga','.cf','.gq','.xyz','.top','.icu','.cc','.info','.club','.work','.live','.online','.site','.buzz'];
+  // смотрим, официальный ли это домен
+  var official=getOfficialName(host);
+  if(official){
+    if(interesting.indexOf('.'+tld)!==-1) flags.push('⚠ домен официальный ('+official+'), но TLD .'+tld+' выглядит подозрительно — проверь внимательно');
+    // даже на официальном домене слова-маркеры в пути могут быть подменой страницы
+    var suspicious=['login','account','verify','security','confirm','update','password','signin','wallet','crypto','bonus'];
+    suspicious.forEach(function(s){ if(url.toLowerCase().indexOf(s)!==-1) flags.push('⚠ слово «'+s+'» во адресе — настоящий '+official+' обычно не просит этого по ссылке'); });
+    if(flags.length===0) flags.push('✓ Этот адрес принадлежит официальному сервису: <b style="color:var(--green)">'+official+'</b>. Настоящий домен — '+host+'. Маскировки нет.');
+  } else {
+    if(interesting.indexOf('.'+tld)!==-1) flags.push('⚠ подозрительный домен (TDL: .'+tld+')');
+    if(parts.length>=3) flags.push('⚠ поддомен: возможно, маскировка настоящего домена');
+    var susp2=['login','account','verify','security','confirm','update','password','signin','wallet','crypto','bonus','free'];
+    susp2.forEach(function(s){ if(url.toLowerCase().indexOf(s)!==-1) flags.push('⚠ содержит слово «'+s+'» — общие признаки фишинга'); });
+    if(flags.length===0) flags.push('✓ ничего подозрительного не очевидно. Но всегда проверяй URL в адресной строке.');
+  }
   out.innerHTML='<b style="color:var(--cyan)">Хост:</b> '+host+'<br>'+flags.join('<br>')+
     '<div style="margin-top:8px;color:var(--muted);font-size:.75rem">Единственный надёжный способ — смотреть на ДОМЕН (например, google.com), а не на текст ссылки.</div>';
 }
