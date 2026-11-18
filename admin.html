@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Админ-панель — CyberZone</title>
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<canvas id="matrix"></canvas>
+<nav>
+  <a href="index.html" class="logo">Cyber<b>Zone</b></a>
+  <div class="links">
+    <a href="index.html">главная</a>
+    <a href="index.html#articles">статьи</a>
+    <a href="exam.html">экзамен</a>
+    <a href="hack-terminal.html">терминал</a>
+    <a href="admin.html" class="admin-link">⚙ админ</a>
+  </div>
+</nav>
+
+<section style="padding-top:110px">
+  <div class="wrap">
+    <div id="adminGuard" style="display:none">
+      <div class="card" style="text-align:center;padding:40px">
+        <div style="font-family:var(--mono);font-weight:800;font-size:1.4rem;color:var(--red)">⛔ Доступ запрещён</div>
+        <p style="color:var(--muted);margin:12px 0 20px">Это панель администратора. Войди под учётной записью админа, чтобы её открыть.</p>
+        <a href="index.html" class="btn">← На главную</a>
+      </div>
+    </div>
+
+    <div id="adminPanel" style="display:none">
+      <span class="sec-label">// АДМИН-ПАНЕЛЬ</span>
+      <div class="exam-header">
+        <div>
+          <h1 class="sec-title" style="margin-bottom:6px">Панель администратора</h1>
+          <p style="color:var(--muted)">Журнал посещений этого сайта. Данные фиксируются локально в браузере, через который заходили (это ограничение статического хостинга).</p>
+        </div>
+        <div class="exam-score" id="adminCounter">0 посещений</div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <h3 style="color:var(--green)">Регистрации и входы</h3>
+        <p style="color:var(--muted);font-size:.85rem">Сколько активных пользователей в этом браузере:</p>
+        <div class="g3" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-top:12px">
+          <div>
+            <div style="font-family:var(--mono);font-size:2rem;font-weight:800;color:var(--green)" id="userCount">0</div>
+            <div style="color:var(--muted);font-size:.8rem">пользователей</div>
+          </div>
+          <div>
+            <div style="font-family:var(--mono);font-size:2rem;font-weight:800;color:var(--cyan)" id="visitCount">0</div>
+            <div style="color:var(--muted);font-size:.8rem">посещений</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="exam-header">
+          <h3 style="color:var(--cyan)">Журнал посещений</h3>
+          <button class="btn red sm" onclick="clearLog()">Очистить журнал</button>
+        </div>
+        <div id="logTable" style="margin-top:10px"></div>
+      </div>
+
+      <div class="actbar" style="margin-top:20px">
+        <button class="btn" onclick="location.href='index.html'">← На главную</button>
+        <button class="btn red" onclick="logout()">Выйти</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer><span class="logo">Cyber<b>Zone</b></span><br>© 2026 · Админ-панель CyberZone</footer>
+
+<script>
+var IS_ADMIN_USER = 'admin';
+function czGet(key, fb){ try{ var v=localStorage.getItem(key); return v?JSON.parse(v):fb; }catch(e){ return fb; } }
+function czSet(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+
+function checkAccess(){
+  var s = czGet('cz_session', null);
+  var isAdmin = s && s.nick === IS_ADMIN_USER;
+  if(isAdmin){
+    document.documentElement.classList.add('has-admin');
+    document.getElementById('adminGuard').style.display='none';
+    document.getElementById('adminPanel').style.display='block';
+    renderAdmin();
+  } else {
+    document.getElementById('adminGuard').style.display='block';
+  }
+}
+
+function renderAdmin(){
+  var log = czGet('cz_visits', []);
+  var users = czGet('cz_users', {});
+  var userList = Object.keys(users).filter(function(n){ return n!==IS_ADMIN_USER; });
+  document.getElementById('userCount').textContent = userList.length;
+  document.getElementById('visitCount').textContent = log.length;
+  document.getElementById('adminCounter').textContent = log.length+' посещений';
+
+  var tbl = document.getElementById('logTable');
+  if(!log.length){
+    tbl.innerHTML = '<p style="color:var(--muted)">Пока нет записей — заходи на сайт и оставляй сессии.</p>';
+    return;
+  }
+  var rows = log.map(function(r){
+    var d = new Date(r.time);
+    var date = d.toLocaleDateString('ru-RU')+' '+d.toLocaleTimeString('ru-RU');
+    return '<tr><td>'+escapeHtml(r.nick)+'</td><td>'+date+'</td><td style="color:var(--muted);font-size:.8rem">'+escapeHtml(r.page||'')+'</td></tr>';
+  }).join('');
+  tbl.innerHTML =
+    '<table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.85rem">'+
+    '<tr style="color:var(--green);text-align:left"><th style="padding:8px;border-bottom:1px solid var(--line)">Ник</th><th style="padding:8px;border-bottom:1px solid var(--line)">Время</th><th style="padding:8px;border-bottom:1px solid var(--line)">Страница</th></tr>'+
+    rows+
+    '</table>';
+}
+
+function clearLog(){ if(confirm('Очистить журнал посещений?')){ czSet('cz_visits', []); renderAdmin(); } }
+function logout(){ czSet('cz_session', null); location.href='index.html'; }
+function escapeHtml(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+checkAccess();
+</script>
+<script src="js/main.js"></script>
+<div id="authOverlay"></div>
+</body>
+</html>

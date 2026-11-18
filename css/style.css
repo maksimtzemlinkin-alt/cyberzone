@@ -184,3 +184,32 @@ output .err{color:var(--red)}
   nav .links a{font-size:.8rem}
   .gh-btn{display:none}
 }
+/* ---- окно входа / регистрации ---- */
+#authOverlay{
+  position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;
+  background:rgba(3,6,12,.88);backdrop-filter:blur(6px);
+  opacity:0;visibility:hidden;transition:.25s;
+}
+#authOverlay.show{opacity:1;visibility:visible}
+.auth-modal{
+  width:min(420px,92vw);background:var(--panel);border:1px solid var(--green);
+  border-radius:16px;padding:32px 30px;box-shadow:0 0 60px rgba(0,255,156,.15);
+  transform:translateY(10px);transition:.25s;
+}
+#authOverlay.show .auth-modal{transform:translateY(0)}
+.auth-modal .lob{font-family:var(--mono);font-weight:800;font-size:1.3rem;color:var(--green);letter-spacing:1px;text-align:center}
+.auth-modal .sub{text-align:center;color:var(--muted);font-size:.85rem;margin:6px 0 22px}
+.auth-modal .errline{color:var(--red);font-family:var(--mono);font-size:.8rem;min-height:18px;margin-bottom:8px}
+.auth-modal label{display:block;color:var(--muted);font-size:.8rem;margin:10px 0 4px}
+.auth-modal .field{margin-bottom:4px}
+.auth-tabs{display:flex;gap:8px;margin-bottom:18px;background:#0d1424;border:1px solid var(--line);border-radius:10px;padding:4px}
+.auth-tabs button{flex:1;border:none;background:transparent;color:var(--muted);font-family:var(--mono);font-size:.85rem;padding:9px;border-radius:8px;cursor:pointer}
+.auth-tabs button.on{background:var(--green);color:#03120a;font-weight:700}
+.auth-hint{text-align:center;margin-top:16px;font-size:.75rem;color:var(--muted)}
+.auth-hint span{cursor:pointer;color:var(--cyan)}
+/* ---- вкладка админа в меню ---- */
+nav .links a.admin-link{display:none;color:var(--green);border:1px solid var(--green);border-radius:5px;padding:5px 10px}
+:root.has-admin nav .links a.admin-link{display:inline-block}
+.btn.block{width:100%;margin-top:12px}
+.user-chip{display:none;font-family:var(--mono);font-size:.8rem;color:var(--cyan);margin-right:6px}
+:root.has-admin .user-chip{display:inline-block}

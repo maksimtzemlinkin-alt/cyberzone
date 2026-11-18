@@ -92,7 +92,129 @@
     });
   }
 
+  // ---- система входа / регистрации ----
+  var ADMIN_USER = 'admin';
+  var ADMIN_PASS = 'CyberZone2026!';
+  var LS_USERS = 'cz_users';
+  var LS_SESSION = 'cz_session';
+  var LS_LOG = 'cz_visits';
+
+  function getJSON(key, fallback){ try { var v=localStorage.getItem(key); return v?JSON.parse(v):fallback; }catch(e){ return fallback; } }
+  function setJSON(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+
+  function loadUsers(){
+    var u=getJSON(LS_USERS,{});
+    // гарантируем запись админа
+    var seeded=false;
+    if(!u[ADMIN_USER]){ u[ADMIN_USER]={pass:ADMIN_PASS, role:'admin', created:Date.now()}; seeded=true; }
+    if(seeded) setJSON(LS_USERS,u);
+    return u;
+  }
+
+  function logVisit(nick){
+    var log=getJSON(LS_LOG,[]);
+    log.unshift({nick:nick, time:Date.now(), page:location.href});
+    if(log.length>500) log.length=500;
+    setJSON(LS_LOG,log);
+  }
+
+  function isAdmin(nick){ return nick===ADMIN_USER; }
+
+  function getSession(){
+    var s=getJSON(LS_SESSION,null);
+    if(s && s.nick){ return s; }
+    return null;
+  }
+
+  function setSession(nick){
+    setJSON(LS_SESSION,{nick:nick, time:Date.now()});
+    logVisit(nick);
+    document.documentElement.classList.add('has-admin');
+  }
+
+  // рендер модального окна входа
+  function showAuth(){
+    var ov=document.getElementById('authOverlay');
+    if(ov){
+      ov.classList.add('show');
+      ov.innerHTML =
+        '<div class="auth-modal">'+
+          '<div class="lob">Cyber<b>Zone</b></div>'+
+          '<div class="sub">Вход для чтения материалов</div>'+
+          '<div class="auth-tabs">'+
+            '<button id="tabLogin" class="on" onclick="CZ.switchTab(\'login\')">Вход</button>'+
+            '<button id="tabReg" onclick="CZ.switchTab(\'reg\')">Регистрация</button>'+
+          '</div>'+
+          '<div id="authForm">'+
+            '<div class="errline" id="authErr"></div>'+
+            '<label>Ник</label><input id="authNick" class="field" autocomplete="off" placeholder="твой ник">'+
+            '<label>Пароль</label><input id="authPass" class="field" type="password" autocomplete="off" placeholder="••••••">'+
+            '<div id="regWrap" style="display:none">'+
+              '<label>Повтори пароль</label><input id="authPass2" class="field" type="password" placeholder="••••••">'+
+            '</div>'+
+            '<button class="btn block" id="authBtn" onclick="CZ.submitAuth()">Войти</button>'+
+          '</div>'+
+        '</div>';
+      document.getElementById('authNick').focus();
+    } else {
+      // если оверлея нет — просто считаем входом (не прерываем)
+      var existing=loadUsers();
+      setSession(ADMIN_USER);
+    }
+  }
+
+  function initAuth(){
+    // скрытая админ-ссылка появляется для залогиненного админа
+    var sess=getSession();
+    if(sess && isAdmin(sess.nick)){
+      document.documentElement.classList.add('has-admin');
+    }
+    // на каждой странице при заходе просим войти, если нет сессии в этом браузере
+    if(!getSession()){
+      // ждём DOM, показываем окно
+      if(document.readyState==='loading'){
+        document.addEventListener('DOMContentLoaded',function(){ showAuth(); });
+      } else {
+        showAuth();
+      }
+    }
+  }
+
+  window.CZ = {
+    switchTab: function(mode){
+      var isLogin = mode==='login';
+      document.getElementById('tabLogin').className = isLogin?'on':'';
+      document.getElementById('tabReg').className = isLogin?'':'on';
+      document.getElementById('regWrap').style.display = isLogin?'none':'block';
+      document.getElementById('authBtn').textContent = isLogin?'Войти':'Зарегистрироваться';
+      document.getElementById('authErr').textContent='';
+    },
+    submitAuth: function(){
+      var nick=document.getElementById('authNick').value.trim();
+      var pass=document.getElementById('authPass').value;
+      var pass2=document.getElementById('authPass2')?document.getElementById('authPass2').value:'';
+      var err=document.getElementById('authErr');
+      var isReg = document.getElementById('regWrap').style.display!=='none';
+      if(!nick || !pass){ err.textContent='Заполни ник и пароль.'; return; }
+      var users=loadUsers();
+      if(isReg){
+        if(nick.toLowerCase()==='admin'){ err.textContent='Этот ник недоступен.'; return; }
+        if(users[nick]){ err.textContent='Ник уже занят. Войди.'; return; }
+        if(pass.length<4){ err.textContent='Пароль короткий (минимум 4 символа).'; return; }
+        if(pass!==pass2){ err.textContent='Пароли не совпадают.'; return; }
+        users[nick]={pass:pass, role:'user', created:Date.now()};
+        setJSON(LS_USERS,users);
+      } else {
+        var u=users[nick];
+        if(!u || u.pass!==pass){ err.textContent='Неверный ник или пароль.'; return; }
+      }
+      setSession(nick);
+      document.getElementById('authOverlay').classList.remove('show');
+    }
+  };
+
   initMatrix();
   highlightNav();
   initSearch();
+  initAuth();
 })();
